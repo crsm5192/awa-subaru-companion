@@ -3,6 +3,7 @@ import { createMainWindow, getMainWindow } from './window'
 import { createTray } from './tray'
 import { registerIpc } from './ipc'
 import { getConfig } from './config'
+import { writeDiagnostic } from './services/diagnostic'
 
 // 单实例锁：桌面宠物只需要一个进程
 const gotLock = app.requestSingleInstanceLock()
@@ -25,6 +26,9 @@ if (!gotLock) {
 
     const win = createMainWindow()
     createTray()
+
+    // 写诊断日志（exe 旁 diagnostic.log），排查模型/音乐路径问题
+    writeDiagnostic()
 
     // 根据配置应用点击穿透
     if (getConfig().pet.clickThrough) {

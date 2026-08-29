@@ -1,11 +1,13 @@
-import { dirname, join } from 'node:path'
+import { app } from 'electron'
+import { join } from 'node:path'
 
 /**
- * 便携应用根目录：portable 打包后 process.execPath 指向临时解压目录，
- * 需要靠 electron-builder 注入的 PORTABLE_EXECUTABLE_DIR 拿到用户放置 exe 的真实目录。
+ * 应用数据根目录。
+ * - 便携版（PORTABLE_EXECUTABLE_DIR 已设）：数据放 exe 旁边，随 exe 携带；
+ * - 安装版（NSIS）：数据放 userData（%APPDATA%），覆盖安装/卸载不会被清空。
  */
 export function appRootDir(): string {
-  return process.env.PORTABLE_EXECUTABLE_DIR || dirname(process.execPath)
+  return process.env.PORTABLE_EXECUTABLE_DIR || app.getPath('userData')
 }
 
 /** exe 旁边的 models 目录（便携外部模型） */

@@ -30,6 +30,26 @@ function loadCubismCore(): Promise<void> {
   })
 }
 
+/** 打印 WebGL / GPU 信息，排查"模型加载了但显示不出来"的问题 */
+function logWebGLInfo(): void {
+  try {
+    const c = document.createElement('canvas')
+    const gl = c.getContext('webgl2') || c.getContext('webgl')
+    if (!gl) {
+      console.error('[webgl] WebGL 不可用（显卡驱动/硬件加速问题）')
+      return
+    }
+    const ext = gl.getExtension('WEBGL_debug_renderer_info')
+    const renderer = ext ? String(gl.getParameter(ext.UNMASKED_RENDERER_WEBGL)) : '(未公开)'
+    const vendor = ext ? String(gl.getParameter(ext.UNMASKED_VENDOR_WEBGL)) : '(未公开)'
+    console.log('[webgl] renderer =', renderer)
+    console.log('[webgl] vendor =', vendor)
+    console.log('[webgl] version =', gl.getParameter(gl.VERSION))
+  } catch (e) {
+    console.error('[webgl] 检查失败', e)
+  }
+}
+
 export default function Live2DPet({ modelPath }: Props): JSX.Element {
   const hostRef = useRef<HTMLDivElement>(null)
   const [status, setStatus] = useState('准备加载…')
@@ -47,6 +67,7 @@ export default function Live2DPet({ modelPath }: Props): JSX.Element {
 
     ;(async () => {
       try {
+        logWebGLInfo()
         setStatus('加载 Cubism Core…')
         await loadCubismCore()
 
