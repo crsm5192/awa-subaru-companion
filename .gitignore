@@ -1,0 +1,25 @@
+node_modules
+.npm-cache
+out
+dist
+release
+build
+*.log
+.env
+.DS_Store
+
+# Cubism SDK 压缩包（体积大 + Live2D 许可，本地保留）
+CubismSdkForWeb-*.zip
+
+# 模型 / 音乐体积大且受版权保护，本地保留不提交
+src/renderer/public/models/
+src/renderer/public/music/
+
+# 本地生成的数据库 / 配置（含个人密钥，勿提交）
+*.db
+*.db-journal
+
+# Live2D 素材生成的本地工具脚本/结果（含本地路径与第三方 API，不进仓库）
+scripts/*.py
+scripts/*_result.txt
+scripts/seethrough_contact_sheet.png

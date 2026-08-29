@@ -1,0 +1,68 @@
+{
+  "name": "awa-subaru-companion",
+  "version": "0.1.0",
+  "description": "安和昴（Awa Subaru）桌面陪伴助手 — Live2D 桌面宠物 + hermes-agent 对话 + CosyVoice 语音 + 番茄钟/Todo/日记 + 思源笔记",
+  "main": "./out/main/index.js",
+  "author": "dorop",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "dev": "electron-vite dev",
+    "start": "electron-vite preview",
+    "build": "electron-vite build",
+    "typecheck:node": "tsc --noEmit -p tsconfig.node.json --composite false",
+    "typecheck:web": "tsc --noEmit -p tsconfig.web.json --composite false",
+    "typecheck": "npm run typecheck:node && npm run typecheck:web",
+    "build:win": "npm run build && electron-builder --win",
+    "build:win:portable": "npm run build && electron-builder --win portable && node scripts/copy-models.js"
+  },
+  "dependencies": {
+    "sql.js": "^1.12.0",
+    "music-metadata": "^10.1.0",
+    "pixi.js": "^8.5.0",
+    "easy-live2d": "^0.4.4",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "zustand": "^4.5.5"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/react": "^18.3.3",
+    "@types/react-dom": "^18.3.0",
+    "@vitejs/plugin-react": "^4.3.1",
+    "electron": "^33.2.0",
+    "electron-builder": "^25.1.8",
+    "electron-vite": "^2.3.0",
+    "typescript": "^5.5.4",
+    "vite": "^5.4.8"
+  },
+  "build": {
+    "appId": "com.dorop.awasubaru",
+    "productName": "AwaSubaruCompanion",
+    "directories": {
+      "output": "release"
+    },
+    "asar": false,
+    "files": [
+      "out/**/*",
+      "!out/renderer/models/**",
+      "!out/renderer/music/**"
+    ],
+    "extraResources": [
+      {
+        "from": "resources/tray.png",
+        "to": "tray.png"
+      },
+      {
+        "from": "node_modules/sql.js/dist/sql-wasm.wasm",
+        "to": "sql-wasm.wasm"
+      }
+    ],
+    "win": {
+      "target": [
+        "portable"
+      ],
+      "icon": "resources/icon.png"
+    }
+  }
+}

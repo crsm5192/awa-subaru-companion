@@ -1,0 +1,92 @@
+import { Notification, ipcMain, screen } from 'electron'
+import { IPC } from '../../shared/constants'
+import type { AppConfig, ChatMessage, DeepPartial, DiaryEntry, SiyuanConfig, TodoItem } from '../../shared/types'
+import { getConfig, setConfig } from '../config'
+import { getMainWindow, clampWindowPosition, setWindowPosition } from '../window'
+import { streamChat } from '../services/hermes'
+import { synthesize } from '../services/tts'
+import { testConnection as siyuanTest } from '../services/siyuan'
+import { listModels } from '../services/models'
+import { listMusic } from '../services/music'
+import { dbAddChat, dbAddTodo, dbClearChat, dbDeleteDiary, dbDeleteTodo, dbListChat, dbListDiary, dbListTodos, dbSaveDiary, dbUpdateTodo } from '../services/db'
+
+export function registerIpc(): void {
+  // ---------- 配置 ----------
+  ipcMain.handle(IPC.ConfigGet, () => getConfig())
+  ipcMain.handle(IPC.ConfigSet, (_e, patch: DeepPartial<AppConfig>) => setConfig(patch))
+
+  // ---------- 模型列表 ----------
+  ipcMain.handle(IPC.ModelsList, () => listModels())
+
+  // ---------- 音乐列表 ----------
+  ipcMain.handle(IPC.MusicList, () => listMusic())
+
+  // ---------- 点击穿透 ----------
+  ipcMain.handle(IPC.PetSetClickThrough, (_e, ignore: boolean) => {
+    getMainWindow()?.setIgnoreMouseEvents(ignore, { forward: true })
+  })
+
+  // ---------- 窗口位置（锁定模式下拖动移动宠物） ----------
+  ipcMain.handle(IPC.PetGetPosition, () => getMainWindow()?.getPosition() ?? [0, 0])
+  ipcMain.handle(IPC.PetSetPosition, (_e, x: number, y: number) => {
+    const win = getMainWindow()
+    if (win) setWindowPosition(win, x, y)
+  })
+
+  // 钳制窗口位置（松手/屏幕变化后调用一次，避免拖动中每帧钳制导致晃动）
+  ipcMain.handle(IPC.PetClampPosition, () => {
+    const win = getMainWindow()
+    if (win) clampWindowPosition(win)
+  })
+
+  // ---------- 屏幕光标 + 窗口边界（眼睛追踪用） ----------
+  ipcMain.handle(IPC.PetGetCursor, () => {
+    const win = getMainWindow()
+    if (!win) return null
+    const [x, y] = win.getPosition()
+    const [w, h] = win.getSize()
+    const c = screen.getCursorScreenPoint()
+    return { cx: c.x, cy: c.y, winX: x, winY: y, winW: w, winH: h }
+  })
+
+  // ---------- 对话（流式） ----------
+  ipcMain.on(IPC.ChatStream, async (event, messages: ChatMessage[]) => {
+    const wc = event.sender
+    try {
+      await streamChat(getConfig().hermes, messages, (delta) => {
+        if (!wc.isDestroyed()) wc.send(IPC.ChatChunk, delta)
+      })
+      if (!wc.isDestroyed()) wc.send(IPC.ChatDone)
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err)
+      if (!wc.isDestroyed()) wc.send(IPC.ChatError, msg)
+    }
+  })
+
+  // ---------- 聊天历史（SQLite） ----------
+  ipcMain.handle(IPC.ChatHistoryGet, () => dbListChat())
+  ipcMain.handle(IPC.ChatHistoryAdd, (_e, msgs: ChatMessage[]) => dbAddChat(msgs))
+  ipcMain.handle(IPC.ChatHistoryClear, () => dbClearChat())
+
+  // ---------- TTS ----------
+  ipcMain.handle(IPC.TtsSpeak, (_e, text: string) => synthesize(getConfig().tts, text))
+
+  // ---------- Todo ----------
+  ipcMain.handle(IPC.TodoList, () => dbListTodos())
+  ipcMain.handle(IPC.TodoAdd, (_e, title: string) => dbAddTodo(title))
+  ipcMain.handle(IPC.TodoUpdate, (_e, patch: TodoItem) => dbUpdateTodo(patch))
+  ipcMain.handle(IPC.TodoDelete, (_e, id: string) => dbDeleteTodo(id))
+
+  // ---------- 日记 ----------
+  ipcMain.handle(IPC.DiaryList, () => dbListDiary())
+  ipcMain.handle(IPC.DiarySave, (_e, entry: DiaryEntry) => dbSaveDiary(entry))
+  ipcMain.handle(IPC.DiaryDelete, (_e, id: string) => dbDeleteDiary(id))
+
+  // ---------- 思源 ----------
+  ipcMain.handle(IPC.SiyuanTest, (_e, cfg: SiyuanConfig) => siyuanTest(cfg))
+
+  // ---------- 系统通知 ----------
+  ipcMain.handle(IPC.Notification, (_e, { title, body }: { title: string; body: string }) => {
+    if (Notification.isSupported()) new Notification({ title, body }).show()
+  })
+}
