@@ -118,7 +118,7 @@ export function createMainWindow(): BrowserWindow {
     resizable: false,
     hasShadow: false,
     backgroundColor: '#00000000', // 透明窗初始底色，避免白/黑闪
-    skipTaskbar: false,
+    skipTaskbar: true, // 不占任务栏，常驻托盘（桌宠）
     webPreferences: {
       preload: join(__dirname, '../preload/index.js'),
       contextIsolation: true,

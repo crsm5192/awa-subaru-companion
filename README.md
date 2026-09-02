@@ -11,7 +11,7 @@
 - 🎙️ **语音**：CosyVoice 安和昴音色 TTS（server 常驻服务 / command CLI 两种模式）。
 - 🎵 **音乐播放器**：顺序/乱序、进度条、读取音频元数据（标题/艺术家）、列表滚动、关面板继续播、记住上次播放。
 - 🍅 **番茄钟 / 待办 / 日记**：本地持久化。
-- 📖 **思源笔记**：内核 API 连接测试。
+- 📖 **思源笔记**：日记 / 待办自动同步（各可选目标笔记本），连接测试。
 - 💾 **存储**：SQLite（sql.js WASM，聊天/待办/日记）。
 - 📦 **双版本打包**：便携版（免安装）+ NSIS 安装版（启动快）；模型 / 音乐 / 配置 / 数据都在 exe 外部。
 - 🩺 **诊断日志**：启动时在数据目录写 `diagnostic.log`，排查模型/音乐路径、WebGL 等问题。
@@ -46,7 +46,7 @@ npm run dev
 
 - `hermes`：`baseUrl` / `apiKey` / `model`（OpenAI 兼容 API）。
 - `tts`：`mode`（`server` 常驻服务 / `command` CLI）、`server.baseUrl`、`speed`。
-- `siyuan`：`baseUrl` / `token`（思源「设置 → 关于 → API token」）。
+- `siyuan`：`baseUrl` / `token`（思源「设置 → 关于 → API token」）；`syncDiary` / `diaryNotebook`（日记同步开关与目标笔记本）、`syncTodo` / `todoNotebook`（待办同步）。日记同步为同路径幂等更新（`/日记/日期`），待办整表覆盖为一篇 Markdown 任务清单。
 - `pet`：`modelPath`、`scale`、`eyeTracking`、锁定等。
 - `chat.persona`：对话规则（人设 / 系统提示词）。
 - `chat.voiceRule`：语音规则（如何输出「日语：」行）。

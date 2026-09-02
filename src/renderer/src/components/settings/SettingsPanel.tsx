@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { AppConfig, ModelInfo } from '@shared/types'
+import type { AppConfig, ModelInfo, SiyuanNotebook } from '@shared/types'
 import { usePetStore } from '../../store/pet'
 
 export default function SettingsPanel(): JSX.Element {
@@ -8,12 +8,15 @@ export default function SettingsPanel(): JSX.Element {
   const [siyuanStatus, setSiyuanStatus] = useState('')
   const [ttsStatus, setTtsStatus] = useState('')
   const [models, setModels] = useState<ModelInfo[]>([])
+  const [notebooks, setNotebooks] = useState<SiyuanNotebook[]>([])
 
   useEffect(() => {
     // 配置 + 模型列表一起加载，避免下拉框在列表未到时先渲染、值对不上（导致记不住选中项）
     void Promise.all([window.api.getConfig(), window.api.models.list()]).then(([c, m]) => {
       setCfg(c)
       setModels(m)
+      // 笔记本列表用当前配置拉一次（失败静默，可手动刷新）
+      void window.api.siyuan.notebooks({ ...c.siyuan }).then(setNotebooks).catch(() => setNotebooks([]))
     })
   }, [])
 
@@ -38,6 +41,17 @@ export default function SettingsPanel(): JSX.Element {
     } catch (e) {
       setSiyuanStatus(e instanceof Error ? e.message : String(e))
     }
+  }
+
+  const reloadNotebooks = (): void => {
+    // 用当前输入框里的地址/token 拉笔记本列表（不必先保存）
+    void window.api.siyuan.notebooks({ ...cfg.siyuan }).then((list) => {
+      setNotebooks(list)
+      setSiyuanStatus(list.length ? `已取到 ${list.length} 个笔记本` : '没有可用笔记本')
+    }).catch((e) => {
+      setNotebooks([])
+      setSiyuanStatus(`获取笔记本失败：${e instanceof Error ? e.message : String(e)}`)
+    })
   }
 
   const testTts = async (): Promise<void> => {
@@ -159,6 +173,51 @@ export default function SettingsPanel(): JSX.Element {
             onChange={(e) => patch({ siyuan: { ...cfg.siyuan, token: e.target.value } })}
           />
         </label>
+        <label className="row">
+          <input
+            type="checkbox"
+            checked={cfg.siyuan.syncDiary}
+            onChange={(e) => patch({ siyuan: { ...cfg.siyuan, syncDiary: e.target.checked } })}
+          />
+          保存日记时同步到思源
+        </label>
+        <label>
+          日记目标笔记本
+          <select
+            value={cfg.siyuan.diaryNotebook}
+            onChange={(e) => patch({ siyuan: { ...cfg.siyuan, diaryNotebook: e.target.value } })}
+          >
+            <option value="">（未选择）</option>
+            {notebooks.map((n) => (
+              <option key={n.id} value={n.id}>
+                {n.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label className="row">
+          <input
+            type="checkbox"
+            checked={cfg.siyuan.syncTodo}
+            onChange={(e) => patch({ siyuan: { ...cfg.siyuan, syncTodo: e.target.checked } })}
+          />
+          待办变更时同步到思源
+        </label>
+        <label>
+          待办目标笔记本
+          <select
+            value={cfg.siyuan.todoNotebook}
+            onChange={(e) => patch({ siyuan: { ...cfg.siyuan, todoNotebook: e.target.value } })}
+          >
+            <option value="">（未选择）</option>
+            {notebooks.map((n) => (
+              <option key={n.id} value={n.id}>
+                {n.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <button onClick={reloadNotebooks}>刷新笔记本列表</button>
         <button onClick={() => void testSiyuan()}>测试连接</button>
         {siyuanStatus && <div className="siyuan-status">{siyuanStatus}</div>}
       </fieldset>

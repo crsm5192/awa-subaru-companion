@@ -39,6 +39,14 @@ export interface TtsConfig {
 export interface SiyuanConfig {
   baseUrl: string
   token: string
+  /** 日记同步目标笔记本 id（空 = 未选择） */
+  diaryNotebook: string
+  /** 待办同步目标笔记本 id（空 = 未选择） */
+  todoNotebook: string
+  /** 保存日记时自动同步到思源 */
+  syncDiary: boolean
+  /** 待办变更时自动同步到思源 */
+  syncTodo: boolean
 }
 
 export interface PetConfig {
@@ -109,6 +117,18 @@ export interface ModelInfo {
 /** 深层 Partial：允许只传嵌套对象里的部分字段（用于配置部分更新） */
 export type DeepPartial<T> = {
   [K in keyof T]?: T[K] extends object ? DeepPartial<T[K]> : T[K]
+}
+
+export interface SiyuanNotebook {
+  id: string
+  name: string
+}
+
+/** 思源同步结果：skipped = 未启用同步/未选笔记本（本地照常保存，不算失败） */
+export interface SiyuanSyncResult {
+  ok: boolean
+  skipped?: boolean
+  error?: string
 }
 
 export interface MusicInfo {

@@ -1,6 +1,6 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { IPC } from '../shared/constants'
-import type { AppConfig, ChatMessage, DeepPartial, DiaryEntry, ModelInfo, MusicInfo, SiyuanConfig, TodoItem, TtsResult } from '../shared/types'
+import type { AppConfig, ChatMessage, DeepPartial, DiaryEntry, ModelInfo, MusicInfo, SiyuanConfig, SiyuanNotebook, SiyuanSyncResult, TodoItem, TtsResult } from '../shared/types'
 
 const api = {
   getConfig: (): Promise<AppConfig> => ipcRenderer.invoke(IPC.ConfigGet),
@@ -50,7 +50,10 @@ const api = {
   },
 
   siyuan: {
-    test: (cfg: SiyuanConfig): Promise<{ ok: boolean; version?: string }> => ipcRenderer.invoke(IPC.SiyuanTest, cfg)
+    test: (cfg: SiyuanConfig): Promise<{ ok: boolean; version?: string }> => ipcRenderer.invoke(IPC.SiyuanTest, cfg),
+    notebooks: (cfg?: SiyuanConfig): Promise<SiyuanNotebook[]> => ipcRenderer.invoke(IPC.SiyuanNotebooks, cfg ?? null),
+    syncDiary: (entry: DiaryEntry): Promise<SiyuanSyncResult> => ipcRenderer.invoke(IPC.SiyuanSyncDiary, entry),
+    syncTodo: (items: TodoItem[]): Promise<SiyuanSyncResult> => ipcRenderer.invoke(IPC.SiyuanSyncTodo, items)
   },
 
   models: {

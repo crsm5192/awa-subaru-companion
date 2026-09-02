@@ -26,7 +26,11 @@ const DEFAULT_CONFIG: AppConfig = {
   },
   siyuan: {
     baseUrl: 'http://127.0.0.1:6806',
-    token: ''
+    token: '',
+    diaryNotebook: '',
+    todoNotebook: '',
+    syncDiary: false,
+    syncTodo: false
   },
   pet: {
     modelPath: 'models/subaru/subaru.model3.json', // 留空 = CSS 占位；填 public/models 下 model3.json 的相对路径启用 Live2D

@@ -34,7 +34,7 @@ body,
   right: 8px;
   bottom: 8px;
   display: flex;
-  gap: 6px;
+  gap: 4px;
   -webkit-app-region: no-drag;
 }
 
@@ -153,6 +153,18 @@ body,
 /* ---- 音乐播放器 ---- */
 .music-panel {
   width: 300px;
+}
+/* 思源同步状态（日记/待办面板头部小字） */
+.sync-status {
+  font-size: 11px;
+  margin-left: 8px;
+  opacity: 0.9;
+}
+.sync-status.ok {
+  color: #4caf50;
+}
+.sync-status.err {
+  color: #e57373;
 }
 /* 正在播放提示（工具栏上方） */
 .now-playing {
@@ -310,14 +322,19 @@ body,
 }
 
 .toolbar button {
-  width: 32px;
-  height: 32px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   border: 1px solid rgba(0, 0, 0, 0.15);
   background: rgba(255, 255, 255, 0.85);
   cursor: pointer;
-  font-size: 15px;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  font-size: 12px;
+  line-height: 1;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
 }
 
 .panel {

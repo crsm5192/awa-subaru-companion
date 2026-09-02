@@ -26,6 +26,9 @@ export const IPC = {
   DiaryDelete: 'diary:delete',
 
   SiyuanTest: 'siyuan:test',
+  SiyuanNotebooks: 'siyuan:notebooks',
+  SiyuanSyncDiary: 'siyuan:sync-diary',
+  SiyuanSyncTodo: 'siyuan:sync-todo',
 
   PetSetClickThrough: 'pet:set-click-through',
   PetGetPosition: 'pet:get-position',

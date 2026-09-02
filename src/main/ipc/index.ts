@@ -5,7 +5,7 @@ import { getConfig, setConfig } from '../config'
 import { getMainWindow, clampWindowPosition, setWindowPosition } from '../window'
 import { streamChat } from '../services/hermes'
 import { synthesize } from '../services/tts'
-import { testConnection as siyuanTest } from '../services/siyuan'
+import { listNotebooks, syncDiary, syncTodoList, testConnection as siyuanTest } from '../services/siyuan'
 import { listModels } from '../services/models'
 import { listMusic } from '../services/music'
 import { dbAddChat, dbAddTodo, dbClearChat, dbDeleteDiary, dbDeleteTodo, dbListChat, dbListDiary, dbListTodos, dbSaveDiary, dbUpdateTodo } from '../services/db'
@@ -84,6 +84,9 @@ export function registerIpc(): void {
 
   // ---------- 思源 ----------
   ipcMain.handle(IPC.SiyuanTest, (_e, cfg: SiyuanConfig) => siyuanTest(cfg))
+  ipcMain.handle(IPC.SiyuanNotebooks, (_e, cfg?: SiyuanConfig) => listNotebooks(cfg ?? getConfig().siyuan))
+  ipcMain.handle(IPC.SiyuanSyncDiary, (_e, entry: DiaryEntry) => syncDiary(getConfig().siyuan, entry))
+  ipcMain.handle(IPC.SiyuanSyncTodo, (_e, items: TodoItem[]) => syncTodoList(getConfig().siyuan, items))
 
   // ---------- 系统通知 ----------
   ipcMain.handle(IPC.Notification, (_e, { title, body }: { title: string; body: string }) => {
