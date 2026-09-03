@@ -3,6 +3,7 @@ import { create } from 'zustand'
 interface PetState {
   modelPath: string
   scale: number
+  opacity: number
   locked: boolean
   offsetX: number
   offsetY: number
@@ -12,6 +13,7 @@ interface PetState {
   headY: number
   setModel: (modelPath: string, scale: number) => void
   setScale: (scale: number) => void
+  setOpacity: (opacity: number) => void
   setLocked: (locked: boolean) => void
   setOffset: (offsetX: number, offsetY: number) => void
   setEyeTracking: (eyeTracking: boolean) => void
@@ -25,6 +27,7 @@ interface PetState {
 export const usePetStore = create<PetState>((set) => ({
   modelPath: '',
   scale: 1,
+  opacity: 1,
   locked: false,
   offsetX: 0,
   offsetY: 0,
@@ -34,6 +37,7 @@ export const usePetStore = create<PetState>((set) => ({
   headY: 0,
   setModel: (modelPath, scale) => set({ modelPath, scale }),
   setScale: (scale) => set({ scale }),
+  setOpacity: (opacity) => set({ opacity }),
   setLocked: (locked) => set({ locked }),
   setOffset: (offsetX, offsetY) => set({ offsetX, offsetY }),
   setEyeTracking: (eyeTracking) => set({ eyeTracking }),

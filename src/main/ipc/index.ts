@@ -2,7 +2,7 @@ import { Notification, ipcMain, screen } from 'electron'
 import { IPC } from '../../shared/constants'
 import type { AppConfig, ChatMessage, DeepPartial, DiaryEntry, SiyuanConfig, TodoItem } from '../../shared/types'
 import { getConfig, setConfig } from '../config'
-import { getMainWindow, clampWindowPosition, setWindowPosition } from '../window'
+import { getMainWindow, clampWindowPosition, setWindowPosition, applyFrameScale } from '../window'
 import { streamChat } from '../services/hermes'
 import { synthesize } from '../services/tts'
 import { listNotebooks, syncDiary, syncTodoList, testConnection as siyuanTest } from '../services/siyuan'
@@ -13,7 +13,15 @@ import { dbAddChat, dbAddTodo, dbClearChat, dbDeleteDiary, dbDeleteTodo, dbListC
 export function registerIpc(): void {
   // ---------- 配置 ----------
   ipcMain.handle(IPC.ConfigGet, () => getConfig())
-  ipcMain.handle(IPC.ConfigSet, (_e, patch: DeepPartial<AppConfig>) => setConfig(patch))
+  ipcMain.handle(IPC.ConfigSet, (_e, patch: DeepPartial<AppConfig>) => {
+    const next = setConfig(patch)
+    // 框架缩放：实时改窗口尺寸（模型随框架自动适配）
+    if (typeof patch.pet?.frameScale === 'number') {
+      const win = getMainWindow()
+      if (win) applyFrameScale(win, patch.pet.frameScale)
+    }
+    return next
+  })
 
   // ---------- 模型列表 ----------
   ipcMain.handle(IPC.ModelsList, () => listModels())

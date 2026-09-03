@@ -35,6 +35,8 @@ const DEFAULT_CONFIG: AppConfig = {
   pet: {
     modelPath: 'models/subaru/subaru.model3.json', // 留空 = CSS 占位；填 public/models 下 model3.json 的相对路径启用 Live2D
     scale: 1.0,
+    opacity: 1.0,
+    frameScale: 1.0,
     clickThrough: false,
     locked: false,
     eyeTracking: true,

@@ -10,11 +10,13 @@ import { usePetStore } from '../../store/pet'
  */
 export default function PetStage(): JSX.Element {
   const modelPath = usePetStore((s) => s.modelPath)
+  const opacity = usePetStore((s) => s.opacity)
   const setModel = usePetStore((s) => s.setModel)
   const setLocked = usePetStore((s) => s.setLocked)
   const setOffset = usePetStore((s) => s.setOffset)
   const setEyeTracking = usePetStore((s) => s.setEyeTracking)
   const setEyeTrackingStrength = usePetStore((s) => s.setEyeTrackingStrength)
+  const setOpacity = usePetStore((s) => s.setOpacity)
 
   useEffect(() => {
     void window.api.getConfig().then((cfg) => {
@@ -23,15 +25,16 @@ export default function PetStage(): JSX.Element {
       setOffset(cfg.pet.offsetX, cfg.pet.offsetY)
       setEyeTracking(cfg.pet.eyeTracking)
       setEyeTrackingStrength(cfg.pet.eyeTrackingStrength)
+      setOpacity(cfg.pet.opacity ?? 1)
     })
-  }, [setModel, setLocked, setOffset, setEyeTracking, setEyeTrackingStrength])
+  }, [setModel, setLocked, setOffset, setEyeTracking, setEyeTrackingStrength, setOpacity])
 
   if (modelPath) {
-    return <Live2DPet modelPath={modelPath} />
+    return <Live2DPet modelPath={modelPath} opacity={opacity} />
   }
 
   return (
-    <div className="pet-stage">
+    <div className="pet-stage" style={{ opacity }}>
       <div className="chibi">
         <div className="chibi-hair-back" />
         <div className="chibi-head">

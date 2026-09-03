@@ -30,6 +30,7 @@ export default function SettingsPanel(): JSX.Element {
     usePetStore.getState().setModel(cfg.pet.modelPath, cfg.pet.scale)
     usePetStore.getState().setLocked(cfg.pet.locked)
     usePetStore.getState().setEyeTracking(cfg.pet.eyeTracking)
+    usePetStore.getState().setOpacity(cfg.pet.opacity)
     setSaved(true)
     setTimeout(() => setSaved(false), 1500)
   }
@@ -296,6 +297,40 @@ export default function SettingsPanel(): JSX.Element {
             }}
           />
           <span>{cfg.pet.eyeTrackingStrength.toFixed(2)}×</span>
+        </label>
+        <label className="row">
+          <span>整体缩放（框架）</span>
+          <input
+            type="range"
+            min={0.5}
+            max={2}
+            step={0.05}
+            value={cfg.pet.frameScale}
+            onChange={(e) => {
+              const v = Number(e.target.value)
+              patch({ pet: { ...cfg.pet, frameScale: v } })
+              // 立即持久化；主进程 ConfigSet 检测到 frameScale 会实时缩放窗口框架
+              void window.api.setConfig({ pet: { frameScale: v } })
+            }}
+          />
+          <span>{cfg.pet.frameScale.toFixed(2)}×</span>
+        </label>
+        <label className="row">
+          <span>不透明度</span>
+          <input
+            type="range"
+            min={0.2}
+            max={1}
+            step={0.05}
+            value={cfg.pet.opacity}
+            onChange={(e) => {
+              const v = Number(e.target.value)
+              patch({ pet: { ...cfg.pet, opacity: v } })
+              usePetStore.getState().setOpacity(v)
+              void window.api.setConfig({ pet: { opacity: v } })
+            }}
+          />
+          <span>{Math.round(cfg.pet.opacity * 100)}%</span>
         </label>
       </fieldset>
 

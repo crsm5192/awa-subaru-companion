@@ -6,6 +6,8 @@ import { usePetStore } from '../../store/pet'
 
 interface Props {
   modelPath: string
+  /** 整体不透明度 0.2~1（设置面板可调） */
+  opacity: number
 }
 
 function withTimeout<T>(p: Promise<T>, ms: number, msg: string): Promise<T> {
@@ -50,7 +52,7 @@ function logWebGLInfo(): void {
   }
 }
 
-export default function Live2DPet({ modelPath }: Props): JSX.Element {
+export default function Live2DPet({ modelPath, opacity }: Props): JSX.Element {
   const hostRef = useRef<HTMLDivElement>(null)
   const [status, setStatus] = useState('准备加载…')
 
@@ -59,6 +61,7 @@ export default function Live2DPet({ modelPath }: Props): JSX.Element {
     let app: Application | null = null
     let canvas: HTMLCanvasElement | null = null
     let cleanupListeners: (() => void) | null = null
+    let onResize: (() => void) | null = null
     const host = hostRef.current
     if (!host) {
       setStatus('容器缺失')
@@ -98,9 +101,25 @@ export default function Live2DPet({ modelPath }: Props): JSX.Element {
         setStatus('适配尺寸…')
         // 基础尺寸：高度适配、脚踩窗口底、水平居中；缩放(滑条)在此基础上乘倍数
         const rawH = sprite.height / Math.max(0.0001, Math.abs(sprite.scale.y))
-        const baseFit = (h * 0.85) / rawH
-        const baseX = w / 2
-        const baseY = h
+        const fit = {
+          baseFit: (h * 0.85) / rawH,
+          baseX: w / 2,
+          baseY: h
+        }
+        // 框架（窗口）尺寸变化：重设画布并重新适配（整体缩放滑条会触发）
+        onResize = (): void => {
+          const w2 = host.clientWidth || 420
+          const h2 = host.clientHeight || 520
+          try {
+            app?.renderer.resize(w2, h2)
+          } catch {
+            /* 渲染器已销毁 */
+          }
+          fit.baseFit = (h2 * 0.85) / rawH
+          fit.baseX = w2 / 2
+          fit.baseY = h2
+        }
+        window.addEventListener('resize', onResize)
 
         // 眼睛追踪状态：目标（屏幕光标归一化 -1..1）+ 当前平滑值
         let targetNX = 0
@@ -120,13 +139,13 @@ export default function Live2DPet({ modelPath }: Props): JSX.Element {
         // 每帧应用：缩放（滑条值）+ 平移（右键拖动）+ 眼睛追踪 + 口型
         const applyTransform = (): void => {
           const { scale, offsetX, offsetY, eyeTracking, eyeTrackingStrength } = usePetStore.getState()
-          sprite.scale.set(baseFit * scale)
+          sprite.scale.set(fit.baseFit * scale)
           sprite.anchor.set(0.5, 1)
-          sprite.x = baseX + offsetX
-          sprite.y = baseY + offsetY
+          sprite.x = fit.baseX + offsetX
+          sprite.y = fit.baseY + offsetY
           // 头部位置（模型头顶往下约 12% = 接近脸/头顶），供文字气泡定位
-          const modelH = baseFit * scale * rawH
-          usePetStore.getState().setHead(baseX + offsetX, baseY + offsetY - modelH * 0.88)
+          const modelH = fit.baseFit * scale * rawH
+          usePetStore.getState().setHead(fit.baseX + offsetX, fit.baseY + offsetY - modelH * 0.88)
           // 眼睛追踪：开 → 平滑趋近光标；关 → 回正
           if (eyeTracking) {
             curNX += (targetNX - curNX) * 0.1
@@ -178,13 +197,14 @@ export default function Live2DPet({ modelPath }: Props): JSX.Element {
         window.addEventListener('mouseup', onUp)
         cleanupListeners = (): void => {
           window.clearInterval(cursorTimer)
+          if (onResize) window.removeEventListener('resize', onResize)
           canvas?.removeEventListener('mousedown', onDown)
           canvas?.removeEventListener('contextmenu', onCtx)
           window.removeEventListener('mousemove', onMove)
           window.removeEventListener('mouseup', onUp)
         }
 
-        console.log('[live2d] DONE rawH=', rawH, 'baseFit=', baseFit)
+        console.log('[live2d] DONE rawH=', rawH, 'baseFit=', fit.baseFit)
         setStatus('')
       } catch (e) {
         console.error('[live2d] ERROR:', e)
@@ -210,7 +230,7 @@ export default function Live2DPet({ modelPath }: Props): JSX.Element {
 
   const isErr = status.startsWith('错误')
   return (
-    <div className="pet-wrap">
+    <div className="pet-wrap" style={{ opacity }}>
       {/* canvas 宿主：JSX 永远为空，React 不会动它里面手动 append 的 canvas */}
       <div className="pet-stage" ref={hostRef} />
       {status && <div className={`live2d-badge ${isErr ? 'live2d-err' : ''}`}>{status}</div>}

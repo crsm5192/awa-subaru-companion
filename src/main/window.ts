@@ -109,9 +109,11 @@ app.on('before-quit', () => {
 })
 
 export function createMainWindow(): BrowserWindow {
+  const cfg = getConfig()
+  const fs = cfg.pet.frameScale ?? 1
   mainWindow = new BrowserWindow({
-    width: WIN_WIDTH,
-    height: WIN_HEIGHT,
+    width: Math.round(WIN_WIDTH * fs),
+    height: Math.round(WIN_HEIGHT * fs),
     frame: false, // 无边框
     transparent: true, // 透明背景（桌面宠物关键）
     alwaysOnTop: true, // 置顶
@@ -131,7 +133,6 @@ export function createMainWindow(): BrowserWindow {
   mainWindow.setAlwaysOnTop(true, 'screen-saver')
 
   // 恢复上次保存的窗口位置，并钳制在屏幕工作区内
-  const cfg = getConfig()
   if (cfg.pet.winX !== null && cfg.pet.winY !== null) {
     mainWindow.setPosition(cfg.pet.winX, cfg.pet.winY)
   }
@@ -179,9 +180,30 @@ export function getMainWindow(): BrowserWindow | null {
   return mainWindow
 }
 
-/** 移动窗口并锁死尺寸（防止无边框透明窗在拖到边缘时尺寸漂移变大） */
+/** 移动窗口并锁死尺寸（框架倍率感知，防止无边框透明窗拖动时尺寸漂移变大） */
 export function setWindowPosition(win: BrowserWindow, x: number, y: number): void {
-  win.setBounds({ x: Math.round(x), y: Math.round(y), width: WIN_WIDTH, height: WIN_HEIGHT })
+  const s = getConfig().pet.frameScale ?? 1
+  win.setBounds({
+    x: Math.round(x),
+    y: Math.round(y),
+    width: Math.round(WIN_WIDTH * s),
+    height: Math.round(WIN_HEIGHT * s)
+  })
+}
+
+/** 应用框架缩放：以窗口中心为锚改尺寸，并钳制回屏幕内 */
+export function applyFrameScale(win: BrowserWindow, scale: number): void {
+  const [oldW, oldH] = win.getSize()
+  const [x, y] = win.getPosition()
+  const w = Math.round(WIN_WIDTH * scale)
+  const h = Math.round(WIN_HEIGHT * scale)
+  win.setBounds({
+    x: x + Math.round((oldW - w) / 2),
+    y: y + Math.round((oldH - h) / 2),
+    width: w,
+    height: h
+  })
+  clampWindowPosition(win)
 }
 
 /** 把窗口钳制到最近的显示器工作区（防止跑出屏幕） */
